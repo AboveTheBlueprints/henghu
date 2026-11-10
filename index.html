@@ -53,17 +53,17 @@ function render() {
   r.out.forEach((line, i) => {
     if (/^—— 第 \d+ 个春天 ——$/.test(line)) { old = r.done || i < cur; /* 过完五个春天也全收起来，表在最底下（不然整页八千多像素，截图看不清） */ tab = null; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
     if (/个春天过完了/.test(line)) { old = false; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
-    if (line.startsWith('回头看')) { tab = el('tab', ''); tab.appendChild(el('', line)); log.appendChild(tab); return; }
+    if (line.startsWith('回头看') || line.startsWith('你碰上过不止一回')) { tab = el('tab', ''); tab.appendChild(el('', line)); log.appendChild(tab); return; }
     if (tab && line.startsWith('表｜')) {
       const ps = line.split('｜'); const row = el('row', ''); row.appendChild(el('rd', ps[1]));
-      ps[2].split('；').forEach(q => row.appendChild(el('rq', q))); row.appendChild(el('rq', ps[3])); tab.appendChild(row); return;
+      if (ps.length > 3) { ps[2].split('；').forEach(q => row.appendChild(el('rq', q))); row.appendChild(el('rq', ps[3])); } else ps[2].split(' → ').forEach(q => row.appendChild(el('rq', q))); tab.appendChild(row); return;
     }
     if (line.startsWith('这个春天你吃了')) { log.appendChild(el(old ? 'ln old' : 'eat', line)); return; }
     if (line.startsWith('沙滩上')) { log.appendChild(el(old ? 'ln old' : 'ln', line)); return; }
     if (old) {
       // 收起来的春天，每一窝缩成一行：哪一家、你做了什么、怎么样了（不然看不回去年对哪一家翻了、放了谁）
       const m = line.match(/^第 (\d+) 窝：.*?一只(.+?)的([大小])鸟/);
-      if (m) { pend = `第 ${m[1]} 窝 ${m[2]}的${m[3]}鸟`; return; }
+      if (m) { const far = /脚前/.test(line) ? '脚前' : /前面一步/.test(line) ? '一步' : /两三步/.test(line) ? '两三步' : /好几步/.test(line) ? '好几步' : '老远'; /* 第五版：收起来也留着它在多远站起来，好跟今年对 */ pend = `第 ${m[1]} 窝 ${m[2]}的${m[3]}鸟（${far}就起来）`; return; }
       if (pend) { const did = line.startsWith('你看了它一眼') ? '走了' : line.startsWith('你在跟前') ? (line.includes('吃了') ? '翻，吃了一窝蛋' : '翻，翻空了') : line.startsWith('它栽了') ? '跟，叼住了' : '跟，跟丢了'; log.appendChild(el('ln old', pend + '：' + did)); pend = null; }
       return;
     }

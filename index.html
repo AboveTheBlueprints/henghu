@@ -15,6 +15,7 @@
   #log .ln { margin: 0 0 2px; }
   #log .me { margin: 0 0 10px; color: #5d4a2b; padding-left: 1em; }
   #log .eat { margin-top: 8px; font-weight: 600; }
+  #log .now { margin-top: 10px; padding: 8px 10px; background: #f8f3e4; border-left: 3px solid #9c8660; border-radius: 4px; }
   #log .tab { margin: 10px 0 4px; padding: 10px 12px; background: #ddd4bd; border-radius: 6px; font-size: 14px; line-height: 1.7; }
   #log .tab .row { margin: 8px 0; }
   #log .tab .rd { font-weight: 600; }
@@ -32,7 +33,7 @@
   <h1>鸻狐</h1>
   <div class="open">
     <p>海边一片沙滩，春天有鸻在沙里下窝。你是住在草那头的狐狸，每个春天顺着沙滩走一趟。</p>
-    <p>走近一窝，大鸟就会从沙里出来，往海边去。你可以在跟前这片沙里<b>翻</b>，可以<b>跟</b>着那只大鸟去，也可以<b>走</b>开不理它。</p>
+    <p>走近一窝，大鸟就会从沙里出来，往海边去。你可以在跟前这片沙里<b>翻</b>，可以<b>跟</b>着那只大鸟去，也可以<b>走</b>开不理它。一趟能碰上七窝，一共五个春天。</p>
   </div>
   <div id="log"></div>
 </main>
@@ -66,7 +67,8 @@ function render() {
       if (pend) { const did = line.startsWith('你看了它一眼') ? '走了' : line.startsWith('你在跟前') ? (line.includes('吃了') ? '翻，吃了一窝蛋' : '翻，翻空了') : line.startsWith('它栽了') ? '跟，叼住了' : '跟，跟丢了'; log.appendChild(el('ln old', pend + '：' + did)); pend = null; }
       return;
     }
-    log.appendChild(el(/^第 \d+ 窝/.test(line) ? 'ln' : 'me', line));
+    const isNow = !r.done && i >= r.out.length - 2 && (/^第 \d+ 窝/.test(line) || r.out.length - 1 === i);   /* 当前这一窝和刚出的结果框出来（鸻网1：新的一小段总在长记录底下找） */
+    log.appendChild(el((/^第 \d+ 窝/.test(line) ? 'ln' : 'me') + (isNow && /^第 \d+ 窝/.test(line) ? ' now' : ''), line));
   });
   btns.innerHTML = '';
   if (r.ask) {

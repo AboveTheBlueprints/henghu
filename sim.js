@@ -60,10 +60,10 @@ function hhRun(acts, seed) {
       if (a === '走') out.push('你看了它一眼，没理它，往前走了。');
       else if (a === '翻') {
         const hit = p.d <= 1 || (p.d === 2 && R() < 0.7) || (p.d === 3 && R() < 0.2);
-        if (hit) { lost.add(i); food += 1; out.push('你在跟前这片沙里拱了几下，拱出一个浅坑，四个蛋。吃了。'); }
+        if (hit) { lost.add(i); food += 1; out.push('你在跟前这片沙里拱了几下，拱出一个浅坑，四个蛋。吃了（算一口）。'); }
         else out.push('你在跟前这片沙里拱了一圈，什么也没有。回头看，那只鸟站在远处，翅膀收得好好的。');
       } else {
-        if (R() < p.a * 0.6) { dead.add(i); food += 2; out.push('它栽了一下，你扑上去，叼住了。'); }
+        if (R() < p.a * 0.6) { dead.add(i); food += 2; out.push('它栽了一下，你扑上去，叼住了（算两口）。'); }
         else out.push('你追了一段，它离你一步远的时候忽然飞起来，绕回去了。窝在哪儿，你没看见。');
       }
     }

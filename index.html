@@ -50,7 +50,7 @@ function render() {
   let cur = 0; r.out.forEach((l, i) => { if (/^—— 第 \d+ 个春天/.test(l)) cur = i; });
   let old = false, tab = null, pend = null;
   r.out.forEach((line, i) => {
-    if (/^—— 第 \d+ 个春天 ——$/.test(line)) { old = !r.done && i < cur; tab = null; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
+    if (/^—— 第 \d+ 个春天 ——$/.test(line)) { old = r.done || i < cur; /* 过完五个春天也全收起来，表在最底下（不然整页八千多像素，截图看不清） */ tab = null; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
     if (/个春天过完了/.test(line)) { old = false; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
     if (line.startsWith('回头看')) { tab = el('tab', ''); tab.appendChild(el('', line)); log.appendChild(tab); return; }
     if (tab && line.startsWith('表｜')) {

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>鸻狐</title>
+<style>
+  body { margin: 0; background: #ece6d6; color: #3b3326; font-family: "PingFang SC", "Noto Sans SC", sans-serif; }
+  main { max-width: 640px; margin: 0 auto; padding: 24px 18px 150px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 14px; }
+  .open p { margin: 0 0 10px; line-height: 1.7; }
+  #log { margin-top: 18px; line-height: 1.75; }
+  #log .sp { margin: 22px 0 6px; font-weight: 600; color: #6b5a3a; }
+  #log .old { color: #6f6553; font-size: 14px; }
+  #log .ln { margin: 0 0 2px; }
+  #log .me { margin: 0 0 10px; color: #5d4a2b; padding-left: 1em; }
+  #log .eat { margin-top: 8px; font-weight: 600; }
+  #log .tab { margin: 10px 0 4px; padding: 10px 12px; background: #ddd4bd; border-radius: 6px; font-size: 14px; line-height: 1.7; }
+  #log .tab .row { margin: 8px 0; }
+  #log .tab .rd { font-weight: 600; }
+  #log .tab .rq { padding-left: 1em; }
+  #bar { position: fixed; left: 0; right: 0; bottom: 0; background: #e4dcc7; border-top: 1px solid #cbbd9c; }
+  #bar .in { max-width: 640px; margin: 0 auto; padding: 12px 18px 16px; }
+  #ask { margin-bottom: 10px; }
+  button { font: inherit; font-size: 16px; padding: 8px 18px; margin: 0 8px 8px 0; border: 1px solid #9c8660; background: #f8f4ea; color: #3b3326; border-radius: 6px; cursor: pointer; }
+  button:hover { background: #fff; }
+  button.quiet { border-color: #c4b693; color: #85775f; font-size: 14px; padding: 8px 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>鸻狐</h1>
+  <div class="open">
+    <p>海边一片沙滩，春天有鸻在沙里下窝。你是住在草那头的狐狸，每个春天顺着沙滩走一趟。</p>
+    <p>走近一窝，大鸟就会从沙里出来，往海边去。你可以在跟前这片沙里<b>翻</b>，可以<b>跟</b>着那只大鸟去，也可以<b>走</b>开不理它。</p>
+  </div>
+  <div id="log"></div>
+</main>
+<div id="bar"><div class="in"><div id="ask"></div><div id="btns"></div></div></div>
+<script src="sim.js"></script>
+<script>
+const SEED = (() => { const m = location.search.match(/seed=(\d+)/); return m ? +m[1] : 7; })();
+let acts = [];
+const log = document.getElementById('log'), ask = document.getElementById('ask'), btns = document.getElementById('btns');
+function el(cls, text) { const d = document.createElement('div'); d.className = cls; d.textContent = text; return d; }
+function render() {
+  const r = hhRun(acts, SEED);
+  log.innerHTML = '';
+  // 过完的春天收起来：只留春天那行、开春那句、吃了几口（罐网1、两扇门网页都嫌越玩越长、找不着今天）
+  let cur = 0; r.out.forEach((l, i) => { if (/^—— 第 \d+ 个春天/.test(l)) cur = i; });
+  let old = false, tab = null, pend = null;
+  r.out.forEach((line, i) => {
+    if (/^—— 第 \d+ 个春天 ——$/.test(line)) { old = !r.done && i < cur; tab = null; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
+    if (/个春天过完了/.test(line)) { old = false; log.appendChild(el('sp', line.replace(/—— /g, '').replace(/ ——/g, ''))); return; }
+    if (line.startsWith('回头看')) { tab = el('tab', ''); tab.appendChild(el('', line)); log.appendChild(tab); return; }
+    if (tab && line.startsWith('表｜')) {
+      const ps = line.split('｜'); const row = el('row', ''); row.appendChild(el('rd', ps[1]));
+      ps[2].split('；').forEach(q => row.appendChild(el('rq', q))); row.appendChild(el('rq', ps[3])); tab.appendChild(row); return;
+    }
+    if (line.startsWith('这个春天你吃了')) { log.appendChild(el(old ? 'ln old' : 'eat', line)); return; }
+    if (line.startsWith('沙滩上')) { log.appendChild(el(old ? 'ln old' : 'ln', line)); return; }
+    if (old) {
+      // 收起来的春天，每一窝缩成一行：哪一家、你做了什么、怎么样了（不然看不回去年对哪一家翻了、放了谁）
+      const m = line.match(/^第 (\d+) 窝：.*?一只(.+?)的([大小])鸟/);
+      if (m) { pend = `第 ${m[1]} 窝 ${m[2]}的${m[3]}鸟`; return; }
+      if (pend) { const did = line.startsWith('你看了它一眼') ? '走了' : line.startsWith('你在跟前') ? (line.includes('吃了') ? '翻，吃了一窝蛋' : '翻，翻空了') : line.startsWith('它栽了') ? '跟，叼住了' : '跟，跟丢了'; log.appendChild(el('ln old', pend + '：' + did)); pend = null; }
+      return;
+    }
+    log.appendChild(el(/^第 \d+ 窝/.test(line) ? 'ln' : 'me', line));
+  });
+  btns.innerHTML = '';
+  if (r.ask) {
+    ask.textContent = `第 ${r.sp} 个春天。`;
+    for (const s of ['翻', '跟', '走']) btn(s, () => { acts.push(s); render(); });
+    if (acts.length) btn('从头再来', () => { if (confirm('从第一个春天重新开始？')) { acts = []; render(); } }, 'quiet');
+  } else {
+    ask.textContent = '五个春天过完了。';
+    btn('从头再来', () => { acts = []; render(); }, 'quiet');
+    btn('换一片沙滩', () => { location.search = '?seed=' + (SEED + 1); }, 'quiet');
+  }
+  window.scrollTo(0, document.body.scrollHeight);
+}
+function btn(t, f, cls) { const b = document.createElement('button'); b.textContent = t; b.onclick = f; if (cls) b.className = cls; btns.appendChild(b); }
+render();
+</script>
+</body>
+</html>
